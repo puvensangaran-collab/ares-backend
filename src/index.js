@@ -54,6 +54,54 @@ app.post('/auth/pkce-challenge', (req, res) => {
   }
 });
 
+// LinkedIn OAuth callback handler
+app.get('/auth/callback', (req, res) => {
+  try {
+    const { code, state, error } = req.query;
+    
+    if (error) {
+      // Redirect back to app with error
+      return res.redirect(`com.example.businesscardscanner://linkedin/callback?error=${encodeURIComponent(error)}`);
+    }
+    
+    if (!code || !state) {
+      return res.redirect(`com.example.businesscardscanner://linkedin/callback?error=missing_parameters`);
+    }
+    
+    // Redirect back to app with authorization code and state
+    res.redirect(`com.example.businesscardscanner://linkedin/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+    
+  } catch (error) {
+    console.error('Error in OAuth callback:', error);
+    res.redirect(`com.example.businesscardscanner://linkedin/callback?error=server_error`);
+  }
+});
+
+// Store PKCE challenge for mobile app
+app.post('/auth/store-challenge', (req, res) => {
+  try {
+    const { state, codeVerifier } = req.body;
+    
+    if (!state || !codeVerifier) {
+      return res.status(400).json({ error: 'Missing state or codeVerifier' });
+    }
+    
+    // Store the code verifier with state as key
+    pkceStore.set(state, codeVerifier);
+    
+    // Clean up old entries
+    if (pkceStore.size > 1000) {
+      const entries = Array.from(pkceStore.entries());
+      entries.slice(0, 500).forEach(([key]) => pkceStore.delete(key));
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error storing PKCE challenge:', error);
+    res.status(500).json({ error: 'Failed to store PKCE challenge' });
+  }
+});
+
 // Exchange authorization code for access token
 app.post('/auth/token', async (req, res) => {
   try {
