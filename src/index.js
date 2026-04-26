@@ -19,6 +19,21 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 // In-memory storage for PKCE challenges (use Redis/database in production)
 const pkceStore = new Map();
 
+// Privacy policy endpoint (required by LinkedIn)
+app.get('/privacy', (req, res) => {
+  res.send(`
+    <html>
+      <head><title>Privacy Policy - Ares Business Card Scanner</title></head>
+      <body>
+        <h1>Privacy Policy</h1>
+        <p>This app only accesses your LinkedIn profile information to authenticate your identity.</p>
+        <p>We do not store or share your personal information with third parties.</p>
+        <p>Contact: support@ares-app.com</p>
+      </body>
+    </html>
+  `);
+});
+
 // Health check endpoint
 app.get('/', (req, res) => {
   res.json({ status: 'Ares backend running' });
