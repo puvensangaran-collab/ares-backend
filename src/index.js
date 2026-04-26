@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
-const fetch = require('node-fetch');
+// fetch is built-in in Node.js 18+
 
 const app = express();
 const PORT = process.env.PORT || 3000;

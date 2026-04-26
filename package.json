@@ -1,7 +1,7 @@
 {
   "name": "ares-backend",
   "version": "1.0.0",
-  "description": "Ares app LinkedIn OAuth backend",
+  "description": "Backend for Ares Business Card Scanner",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -9,11 +9,12 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "axios": "^1.6.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1"
+    "cors": "^2.8.5"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
