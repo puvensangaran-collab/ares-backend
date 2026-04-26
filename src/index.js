@@ -144,8 +144,14 @@ app.post('/auth/token', async (req, res) => {
       });
     }
     
-    // Get user profile information
-    const profileResponse = await fetch('https://api.linkedin.com/v2/userinfo', {
+    // Get user profile information using basic scopes
+    const profileResponse = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName,profilePicture(displayImage~:playableStreams))', {
+      headers: {
+        'Authorization': `Bearer ${tokenData.access_token}`
+      }
+    });
+    
+    const emailResponse = await fetch('https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', {
       headers: {
         'Authorization': `Bearer ${tokenData.access_token}`
       }
@@ -157,15 +163,23 @@ app.post('/auth/token', async (req, res) => {
     }
     
     const profileData = await profileResponse.json();
+    const emailData = emailResponse.ok ? await emailResponse.json() : null;
+    
+    // Extract user information
+    const firstName = profileData.firstName?.localized?.en_US || '';
+    const lastName = profileData.lastName?.localized?.en_US || '';
+    const name = `${firstName} ${lastName}`.trim();
+    const email = emailData?.elements?.[0]?.['handle~']?.emailAddress || '';
+    const picture = profileData.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier || '';
     
     res.json({
       access_token: tokenData.access_token,
       expires_in: tokenData.expires_in,
       user: {
-        id: profileData.sub,
-        name: profileData.name,
-        email: profileData.email,
-        picture: profileData.picture
+        id: profileData.id,
+        name: name,
+        email: email,
+        picture: picture
       }
     });
     
@@ -185,7 +199,7 @@ app.post('/auth/validate', async (req, res) => {
     }
     
     // Validate token by making a request to LinkedIn API
-    const response = await fetch('https://api.linkedin.com/v2/userinfo', {
+    const response = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName)', {
       headers: {
         'Authorization': `Bearer ${access_token}`
       }
@@ -196,13 +210,17 @@ app.post('/auth/validate', async (req, res) => {
     }
     
     const userData = await response.json();
+    const firstName = userData.firstName?.localized?.en_US || '';
+    const lastName = userData.lastName?.localized?.en_US || '';
+    const name = `${firstName} ${lastName}`.trim();
+    
     res.json({ 
       valid: true, 
       user: {
-        id: userData.sub,
-        name: userData.name,
-        email: userData.email,
-        picture: userData.picture
+        id: userData.id,
+        name: name,
+        email: '', // Email requires separate API call
+        picture: ''
       }
     });
     
